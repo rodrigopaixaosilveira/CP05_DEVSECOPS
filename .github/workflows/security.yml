@@ -1,0 +1,64 @@
+name: Security Pipeline
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------
+  # BARREIRA 1 — Segredos no código (chaves, tokens, senhas)
+  # ---------------------------------------------------------------
+  gitleaks:
+    name: Gitleaks (segredos)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout com histórico completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Gitleaks precisa do histórico para varrer os commits
+
+      - name: Rodar Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------
+  # BARREIRA 2 — Código vulnerável (SAST)
+  # ---------------------------------------------------------------
+  semgrep:
+    name: Semgrep (SAST)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Rodar Semgrep
+        # --error faz o job falhar se houver qualquer achado
+        run: semgrep scan --config auto --error
+
+  # ---------------------------------------------------------------
+  # BARREIRA 3 — Imagem Docker com CVE crítico
+  # ---------------------------------------------------------------
+  trivy:
+    name: Trivy (CVEs na imagem)
+    runs-on: ubuntu-latest
+    needs: [gitleaks, semgrep]   # só constrói a imagem se o código passou
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build da imagem
+        run: docker build -t arcanjosa-site:${{ github.sha }} .
+
+      - name: Rodar Trivy na imagem
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:0.58.1 image \
+            --severity CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            arcanjosa-site:${{ github.sha }}

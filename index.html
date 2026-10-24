@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcanjosa | Pipeline DevSecOps</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Arcanjosa</h1>
+    <p>Pipeline de segurança de referência — CP05</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>🔑 Gitleaks</h2>
+      <p>Barra commits que contenham segredos (chaves de API, tokens, senhas).</p>
+    </section>
+    <section class="card">
+      <h2>🧪 Semgrep</h2>
+      <p>Análise estática (SAST): aponta código vulnerável, como uso de <code>eval</code>.</p>
+    </section>
+    <section class="card">
+      <h2>🐳 Trivy</h2>
+      <p>Escaneia a imagem Docker e falha o pipeline se houver CVE crítico.</p>
+    </section>
+
+    <section class="card">
+      <h2>Status</h2>
+      <p id="status">Carregando...</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>FIAP | Engenharia de Software | DevSecOps and Cloud Computing</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
